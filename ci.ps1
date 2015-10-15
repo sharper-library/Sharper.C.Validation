@@ -1,7 +1,5 @@
 $TestsRegex = '\.Tests$'
 
-$env:DNX_BUILD_VERSION = 'build-{0:D5}' -f $env:APPVEYOR_BUILD_NUMBER
-
 function AllProjects() {
     Get-ChildItem */project.json
 }
@@ -32,6 +30,8 @@ function InstallCmd() {
 }
 
 function BuildCmd() {
+    $env:DNX_BUILD_VERSION =
+        'build-{0}' -f ($env:APPVEYOR_BUILD_NUMBER.PadLeft(5, '0'))
     dnu pack --configuration Release (PackageProjects)
 }
 
