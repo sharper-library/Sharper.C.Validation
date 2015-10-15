@@ -33,7 +33,7 @@ function BuildCmd() {
 }
 
 function TestCmd() {
-    $codes = (TestProjects) | %{dnx $_ test | Write-Host; $LASTEXITCODE}
+    $codes = (TestProjects) | %{dnx -p $_ test | Write-Host; $LASTEXITCODE}
     $code = ($codes | Measure-Object -Sum).Sum
     exit $code
 }
