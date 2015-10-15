@@ -1,5 +1,3 @@
-Param([string]$phase)
-
 $TestsRegex = '\.Tests$'
 
 function AllProjects() {
@@ -14,23 +12,47 @@ function TestProjects() {
     AllProjects | Where {$_.Directory.Name -match $TestsRegex}
 }
 
-function InstallPhase() {
+function CleanCmd() {
+    AllProjects | %{$_.Directory} | %{
+        if (Test-Path $_/bin) {Remove-Item -Recurse $_/bin}
+        if (Test-Path $_/obj) {Remove-Item -Recurse $_/obj}
+    }
+}
+
+function RestoreCmd() {
+    dnu restore
+}
+
+function InstallCmd() {
     dnvm install latest
     dnu restore
 }
 
-function BuildPhase() {
+function BuildCmd() {
     dnu pack --configuration Release (PackageProjects)
 }
 
-function TestPhase() {
+function TestCmd() {
     $codes = (TestProjects) | %{dnx $_ test | Write-Host; $LASTEXITCODE}
     $code = ($codes | Measure-Object -Sum).Sum
     exit $code
 }
 
-switch ($phase) {
-    install {InstallPhase}
-    build {BuildPhase}
-    test {TestPhase}
+function RegisterCmd() {
+    PackageProjects | %{
+        Get-ChildItem -Recurse *.nupkg | %{dnu packages add $_}
+    }
 }
+
+function RunCommand($name) {
+    switch ($name) {
+        clean {CleanCmd}
+        restore {RestoreCmd}
+        install {InstallCmd}
+        build {BuildCmd}
+        test {TestCmd}
+        register {RegisterCmd}
+    }
+}
+
+$args | %{RunCommand $_}
