@@ -30,8 +30,13 @@ function InstallCmd() {
 }
 
 function BuildCmd() {
-    $env:DNX_BUILD_VERSION =
-        'build-{0}' -f ($env:APPVEYOR_BUILD_NUMBER.PadLeft(5, '0'))
+    if ($env:APPVEYOR_BUILD_NUMBER) {
+      $env:DNX_BUILD_VERSION =
+          'build-{0}' -f (([string]$env:APPVEYOR_BUILD_NUMBER).PadLeft(5, '0'))
+    }
+    else {
+      $env:DNX_BUILD_VERSION = 'z'
+    }
     dnu pack --configuration Release (PackageProjects)
 }
 
