@@ -21,6 +21,7 @@ function CleanCmd() {
         if (Test-Path $_/bin) {Remove-Item -Recurse $_/bin}
         if (Test-Path $_/obj) {Remove-Item -Recurse $_/obj}
     }
+    if (Test-Path artifacts) {Remove-Item -Recurse artifacts}
 }
 
 function RestoreCmd() {
