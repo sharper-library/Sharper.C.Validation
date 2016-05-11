@@ -13,7 +13,7 @@ function TestProjects() {
 }
 
 function GlobalSdk($path) {
-    (Get-Content $path | ConvertFrom-Json).sdk
+    (ConvertFrom-Json ((Get-Content $path) -join "`n")).sdk
 }
 
 function CleanCmd() {
