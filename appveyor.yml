@@ -53,7 +53,7 @@ deploy:
     api_key:
       secure: vw1oq34RgUGX7J5FSU4KwT0OCyr/OBaY8NGAqa096ahvtmDmkWHUTNXdZ6cMd6Q8
     skip_symbols: false
-    symbol_server: https://nuget.symbolsource.org/MyGet/sharper-c
+    symbol_server: https://www.myget.org/F/sharper-c/api/v2/package
 
 notifications:
   - provider: Email
