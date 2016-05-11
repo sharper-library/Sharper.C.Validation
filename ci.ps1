@@ -12,6 +12,10 @@ function TestProjects() {
     AllProjects | Where {$_.Directory.Name -match $TestsRegex}
 }
 
+function GlobalSdk($path) {
+    (Get-Content $path | ConvertFrom-Json).sdk
+}
+
 function CleanCmd() {
     AllProjects | %{$_.Directory} | %{
         if (Test-Path $_/bin) {Remove-Item -Recurse $_/bin}
@@ -25,7 +29,8 @@ function RestoreCmd() {
 
 function InstallCmd() {
     nuget sources add -Name Sharper.C -Source $env:SHARPER_C_FEED
-    dnvm install latest
+    $sdk = GlobalSdk 'global.json'
+    dnvm install $sdk.version -r $sdk.runtime -arch $sdk.architecture
     dnu restore
 }
 
