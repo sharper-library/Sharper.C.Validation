@@ -34,13 +34,17 @@ function InstallCmd() {
 }
 
 function BuildCmd() {
+    Write-Host "Building projects:"
+    PackageProjects | %{Write-Host "   $_"}
     if ($env:BUILD_BUILDNUMBER) {
       $env:DNX_BUILD_VERSION = $env:BUILD_BUILDNUMBER
     }
     else {
       $env:DNX_BUILD_VERSION = 'z'
     }
-    dnvm exec ci_build dnu pack --configuration Release (PackageProjects)
+    PackageProjects | %{
+      dnvm exec ci_build dnu pack --configuration Release $_.Directory
+    }
 }
 
 function TestCmd() {
