@@ -29,16 +29,14 @@ function RestoreCmd() {
 }
 
 function InstallCmd() {
-    nuget sources add -Name Sharper.C -Source $env:SHARPER_C_FEED
     $sdk = GlobalSdk 'global.json'
     dnvm install $sdk.version -r $sdk.runtime -arch $sdk.architecture
     dnu restore
 }
 
 function BuildCmd() {
-    if ($env:APPVEYOR_BUILD_NUMBER) {
-      $env:DNX_BUILD_VERSION =
-          'build-{0}' -f (([string]$env:APPVEYOR_BUILD_NUMBER).PadLeft(5, '0'))
+    if ($env:BUILD_BUILDNUMBER) {
+      $env:DNX_BUILD_VERSION = $env:BUILD_BUILDNUMBER
     }
     else {
       $env:DNX_BUILD_VERSION = 'z'
