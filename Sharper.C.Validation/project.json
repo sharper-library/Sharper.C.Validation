@@ -1,0 +1,22 @@
+{ "version": "0.1.0-*"
+, "description": "Type safe validation"
+, "authors": [ "Jeremy Hughes" ]
+, "projectUrl": "https://github.com/sharper-library/Sharper.C.Validation"
+, "licenseUrl": "https://raw.githubusercontent.com/sharper-library/Sharper.C.Validation/master/LICENSE.txt"
+
+  , "dependencies":
+  { "Sharper.C.Maybe": "0.1.0-master-*"
+    , "Sharper.C.Sum": "0.1.0-master-*"
+    , "System.Collections.Immutable": "1.1.37"
+  }
+
+, "frameworks":
+  { "dotnet":
+    { "dependencies":
+      { "System.Runtime": "4.0.20"
+      }
+    }
+  , "dnx451": { }
+  , "net451": { }
+  }
+}

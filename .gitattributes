@@ -1,0 +1,4 @@
+*.json filter=json
+*.json filter=bom
+
+* text=auto
