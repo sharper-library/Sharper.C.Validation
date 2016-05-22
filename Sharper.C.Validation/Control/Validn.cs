@@ -15,11 +15,11 @@ namespace Sharper.C.Control
         public static Validn<A> Success(A a)
         =>  new SuccessCase(a);
 
-        public static Validn<A> Failure(ImmutableList<Invalid> errs)
+        public static Validn<A> Failure(ImmutableList<ValidnFail> errs)
         =>  new FailureCase(errs);
 
         public X Cata<X>
-          ( Func<ImmutableList<Invalid>, X> failure
+          ( Func<ImmutableList<ValidnFail>, X> failure
           , Func<A, X> success
           )
         =>  this is FailureCase
@@ -53,10 +53,10 @@ namespace Sharper.C.Control
               , a => a
               );
 
-        public Or<ImmutableList<Invalid>, A> ToOr
+        public Or<ImmutableList<ValidnFail>, A> ToOr
         =>  Cata
-              ( Or.Left<ImmutableList<Invalid>, A>
-              , Or.Right<ImmutableList<Invalid>, A>
+              ( Or.Left<ImmutableList<ValidnFail>, A>
+              , Or.Right<ImmutableList<ValidnFail>, A>
               );
 
         private sealed class SuccessCase
@@ -72,9 +72,9 @@ namespace Sharper.C.Control
         private sealed class FailureCase
           : Validn<A>
         {
-            public ImmutableList<Invalid> Errors { get; }
+            public ImmutableList<ValidnFail> Errors { get; }
 
-            public FailureCase(ImmutableList<Invalid> errors)
+            public FailureCase(ImmutableList<ValidnFail> errors)
             {   Errors = errors;
             }
         }
@@ -85,13 +85,13 @@ namespace Sharper.C.Control
         public static Validn<A> Success<A>(A a)
         =>  Validn<A>.Success(a);
 
-        public static Validn<A> Failure<A>(ImmutableList<Invalid> errs)
+        public static Validn<A> Failure<A>(ImmutableList<ValidnFail> errs)
         =>  Validn<A>.Failure(errs);
 
         public static Validn<A> Pure<A>(A a)
         =>  Success(a);
 
-        public static Validn<A> Fail<A>(Invalid ex)
+        public static Validn<A> Fail<A>(ValidnFail ex)
         =>  Validn<A>.Failure(ImmutableList.Create(ex));
 
         public static Validn<B> Ap<A, B>
@@ -109,35 +109,37 @@ namespace Sharper.C.Control
           )
         =>  va.ZipWith(vb, f);
 
-        public static Validn<A> ToValidn<A>(Or<ImmutableList<Invalid>, A> or)
+        public static Validn<A> ToValidn<A>
+          ( Or<ImmutableList<ValidnFail>, A> or
+          )
         =>  or.Cata(Failure<A>, Success);
 
-        public static Validn<A> ToValidn<A>(Or<Invalid, A> or)
+        public static Validn<A> ToValidn<A>(Or<ValidnFail, A> or)
         =>  or.Cata(Fail<A>, Success);
 
-        public static Invalid Error(string message)
-        =>  new AInvalid(message);
+        public static ValidnFail Error(string message)
+        =>  new AValidnFail(message);
 
-        public static Invalid<A> Error<A>(string message, A invalidValue)
-        =>  new AInvalid<A>($"{message} {invalidValue}", invalidValue);
+        public static ValidnFail<A> Error<A>(string message, A invalidValue)
+        =>  new AValidnFail<A>($"{message} {invalidValue}", invalidValue);
 
-        private struct AInvalid
-          : Invalid
+        private struct AValidnFail
+          : ValidnFail
         {
             public string Message { get; }
 
-            public AInvalid(string msg)
+            public AValidnFail(string msg)
             {   Message = msg;
             }
         }
 
-        private struct AInvalid<A>
-          : Invalid<A>
+        private struct AValidnFail<A>
+          : ValidnFail<A>
         {
             public string Message { get; }
             public A Value { get; }
 
-            public AInvalid(string msg, A a)
+            public AValidnFail(string msg, A a)
             {   Message = msg;
                 Value = a;
             }

@@ -1,12 +1,12 @@
 namespace Sharper.C.Data.Validation
 {
-    public interface Invalid
+    public interface ValidnFail
     {
         string Message { get; }
     }
 
-    public interface Invalid<A>
-      : Invalid
+    public interface ValidnFail<A>
+      : ValidnFail
     {
         A Value { get; }
     }
