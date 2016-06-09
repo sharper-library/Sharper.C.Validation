@@ -1,5 +1,19 @@
 $TestsRegex = '\.Tests$'
 
+$dotnetCliUrl = 'https://dotnetcli.blob.core.windows.net/dotnet/preview/Binaries/Latest/dotnet-dev-win-x64.latest.zip'
+
+if (Test-Path '.dotnet-cli/dotnet.exe') {
+    $dotnet = '.dotnet-cli/dotnet.exe'
+}
+else {
+    $dotnet = 'dotnet.exe'
+}
+
+function ExtractZip($srcZip, $destDir) {
+    Add-Type -Assembly "System.IO.Compression.FileSystem"
+    [IO.Compression.ZipFile]::ExtractToDirectory($srcZip, $destDir)
+}
+
 function AllProjects() {
     Get-ChildItem */project.json
 }
@@ -12,10 +26,6 @@ function TestProjects() {
     AllProjects | Where {$_.Directory.Name -match $TestsRegex}
 }
 
-function GlobalSdk($path) {
-    (ConvertFrom-Json ((Get-Content $path) -join "`n")).sdk
-}
-
 function CleanCmd() {
     AllProjects | %{$_.Directory} | %{
         if (Test-Path $_/bin) {Remove-Item -Recurse $_/bin}
@@ -24,50 +34,57 @@ function CleanCmd() {
     if (Test-Path artifacts) {Remove-Item -Recurse artifacts}
 }
 
-function EnsureDnvm() {
-    $sdk = GlobalSdk 'global.json'
-    dnvm install -Alias ci_build $sdk.version -r $sdk.runtime -arch $sdk.architecture
+function EnsureDotnetCliCmd() {
+    if (!(Test-Path '.dotnet-cli/dotnet.exe'))
+    {
+        Invoke-WebRequest $dotnetCliUrl -OutFile 'dotnet-cli.zip'
+        ExtractZip 'dotnet-cli.zip' "$pwd/.dotnet-cli"
+        $dotnet = '.dotnet-cli/dotnet.exe'
+    }
 }
 
 function InstallCmd() {
-    dnvm exec ci_build dnu restore
+    & $dotnet restore
 }
 
 function BuildCmd() {
     Write-Host "Building projects:"
     PackageProjects | %{Write-Host "   $_"}
     if ($env:BUILD_BUILDNUMBER) {
-      $env:DNX_BUILD_VERSION = $env:BUILD_BUILDNUMBER
+      $env:DOTNET_BUILD_VERSION = $env:BUILD_BUILDNUMBER
     }
     else {
-      $env:DNX_BUILD_VERSION = 'z'
+      $env:DOTNET_BUILD_VERSION = 'z'
     }
     PackageProjects | %{
-      dnvm exec ci_build dnu pack --configuration Release $_.Directory
+      Write-Host "Building $_"
+      & $dotnet pack $_.Directory -c Release
     }
 }
 
 function TestCmd() {
-    $codes = (TestProjects) | %{dnx -p $_ test | Write-Host; $LASTEXITCODE}
+    $codes = (TestProjects) | %{& $dotnet test $_ | Write-Host; $LASTEXITCODE}
     $code = ($codes | Measure-Object -Sum).Sum
     exit $code
 }
 
 function RegisterCmd() {
     PackageProjects | %{
-        Get-ChildItem -Recurse *.nupkg | %{dnvm exec ci_build dnu packages add $_}
+        Get-ChildItem -Recurse *.nupkg | %{
+            nuget add $_ -Source "$env:USERPROFILE/.nuget/packages"
+        }
     }
 }
 
 function RunCommand($name) {
-    EnsureDnvm
     switch ($name) {
+        ensurecli {EnsureDotnetCliCmd}
         clean {CleanCmd}
         install {InstallCmd}
         build {BuildCmd}
         test {TestCmd}
         register {RegisterCmd}
-        all {CleanCmd; RestoreCmd; BuildCmd; RegisterCmd}
+        all {CleanCmd; InstallCmd; BuildCmd; RegisterCmd}
     }
 }
 
